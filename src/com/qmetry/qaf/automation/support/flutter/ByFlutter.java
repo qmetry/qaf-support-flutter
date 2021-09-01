@@ -22,7 +22,6 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonPrimitive;
 import com.qmetry.qaf.automation.ui.webdriver.QAFExtendedWebElement;
-import com.qmetry.qaf.automation.util.DateUtil;
 import com.qmetry.qaf.automation.util.JSONUtil;
 import com.qmetry.qaf.automation.util.StringUtil;
 
