@@ -3,15 +3,17 @@
  */
 package com.qmetry.qaf.automation.support.flutter;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectOutputStream;
+import static com.qmetry.qaf.automation.support.flutter.FlutterUtils.scrollAndFind;
+import static com.qmetry.qaf.automation.support.flutter.FlutterUtils.scrollIntoView;
+
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.openqa.selenium.By;
 import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.SearchContext;
@@ -22,6 +24,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonPrimitive;
 import com.qmetry.qaf.automation.ui.webdriver.QAFExtendedWebElement;
+import com.qmetry.qaf.automation.ui.webdriver.QAFWebElement;
 import com.qmetry.qaf.automation.util.JSONUtil;
 import com.qmetry.qaf.automation.util.StringUtil;
 
@@ -32,8 +35,9 @@ import com.qmetry.qaf.automation.util.StringUtil;
  *
  */
 public class ByFlutter extends By {
+	private final Log logger = LogFactory.getLog(ByFlutter.class);
+
 	private final Gson gson = new Gson();
-	// private String id;
 	protected Map<String, Object> rawMap;
 
 	public ByFlutter(String rawMap) {
@@ -41,105 +45,52 @@ public class ByFlutter extends By {
 	}
 
 	public ByFlutter(Map<String, Object> rawMap) {
-		// id = serialize(rawMap);
 		this.rawMap = new HashMap<String, Object>(rawMap);
-		// this.rawMap.put("firstMatchOnly", false);
-
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public WebElement findElement(SearchContext context) {
-		QAFExtendedWebElement ele = new QAFExtendedWebElement(this);
-		//((AppiumDriver<WebElement>) ele.getWrappedDriver().getUnderLayingDriver()).context("FLUTTER");
-		ele.setId(getId(context));
+		FlutterElement ele = new FlutterElement(this);
+		// ((AppiumDriver<WebElement>)ele.getWrappedDriver().getUnderLayingDriver()).context("FLUTTER");
+		Object res = getId(context);
+		ele.setId(res.toString());
 		try {
-			if (WebElement.class.isAssignableFrom(context.getClass())) {
-				Object res = ele.getWrappedDriver().executeScript("flutter:scrollUntilVisible", (WebElement) context,
-						ele, 0, 0, 5, 5);
+			try {
+				res = ele.getWrappedDriver().executeScript("flutter:waitFor", ele, 1);
+				scrollIntoView(ele);
+			} catch (Exception e) {
+				if (context!=null && QAFWebElement.class.isAssignableFrom(context.getClass())) {
+					scrollAndFind((QAFWebElement)context, ele);
+					scrollIntoView(ele);
+				}
 			}
-			Object res = ele.getWrappedDriver().executeScript("flutter:waitFor", ele, 1);
-			if (List.class.isAssignableFrom(res.getClass())) {
-				return ((List<WebElement>) res).get(0);
-			}
-
-			return (WebElement) res;
-		} catch (Exception e) {
 			return ele;
-			// throw new NoSuchElementException("Cannot locate an element using " +
-			// ele.toString());
-		}
-	}
-
-	@SuppressWarnings("unchecked")
-	@Override
-	public List<WebElement> findElements(SearchContext context) {
-
-		QAFExtendedWebElement  ele = new QAFExtendedWebElement(this);
-		//((AppiumDriver<WebElement>) ele.getWrappedDriver().getUnderLayingDriver()).context("FLUTTER");
-		ele.setId(getId(context));
-		try {
-			if (WebElement.class.isAssignableFrom(context.getClass())) {
-				Object res = ele.getWrappedDriver().executeScript("flutter:scrollUntilVisible",
-						serialize(new Type("ListView").rawMap), serialize(rawMap), 0, 0, 5, 5);
-			}
-			Object res = ele.getWrappedDriver().executeScript("flutter:waitFor", ele, 1);
-			if (List.class.isAssignableFrom(res.getClass())) {
-				return (List<WebElement>) res;
-			}
-			if (WebElement.class.isAssignableFrom(res.getClass())) {
-				Arrays.asList(res);
-			}
-
 		} catch (Exception e) {
-			// Object res = ele.getWrappedDriver().executeScript("flutter:scrollIntoView",
-			// ele);
-
 			throw new NoSuchElementException("Cannot locate an element using " + ele.toString());
 		}
-		return Arrays.asList(ele);
-
 	}
 
-	private String getId(SearchContext context) {
-		if (WebElement.class.isAssignableFrom(context.getClass())) {
+	@Override
+	public List<WebElement> findElements(SearchContext context) {
+		logger.warn("Flutter driver doesn't support find list of elemetns. You will get list with only one element.");
+		return Arrays.asList((WebElement) findElement(context));
+	}
+
+
+	protected String getId(SearchContext context) {
+		if (context!=null && WebElement.class.isAssignableFrom(context.getClass())) {
 			Map<String, Object> childElement = new HashMap<String, Object>();
 			childElement.put("finderType", "Descendant");
-			childElement.put("matchRoot", false);
+			childElement.put("matchRoot", true);
 			childElement.put("firstMatchOnly", true);
 
-			/*
-			 * new Type("Center").rawMap.forEach((k, v) -> { childElement.put("of_" + k, v);
-			 * });
-			 */
-			childElement.put("of", gson.toJson(new Type("ListView").rawMap));
+			childElement.put("of", new String(Base64.getDecoder().decode(((QAFExtendedWebElement) context).getId())));
 
-			childElement.put("matching", gson.toJson(rawMap));
-
-			/*
-			 * childElement.put("of_ELEMENT", ((RemoteWebElement) context).getId());
-			 * rawMap.forEach((k, v) -> { childElement.put("matching_" + k, v); });
-			 */
-			// childElement.put("matching",rawMap);
+			childElement.put("matching", JSONUtil.toString(rawMap));
 
 			return serialize(childElement);
 		}
 		return serialize(rawMap);
-	}
-
-	private String encode(byte[] s) {
-		return Base64.getEncoder().encodeToString(s);
-	}
-
-	private byte[] getBytes(Object o) {
-		ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
-		try (ObjectOutputStream out = new ObjectOutputStream(byteOut);) {
-			out.writeObject(o);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		// return byteOut.toByteArray();
-		return new Gson().toJson(o).replace('"', '\'').getBytes();
 	}
 
 	@Override
@@ -194,6 +145,17 @@ public class ByFlutter extends By {
 			return "ByFlutter SemanticsLabel: " + rawMap.get("label");
 		}
 	}
+	public static class SemanticsLabelRegEx extends ByFlutter {
+
+		public SemanticsLabelRegEx(String label) {
+			super(ImmutableMap.of("finderType", "BySemanticsLabel", "isRegExp", true, "label", label));
+		}
+
+		@Override
+		public String toString() {
+			return "ByFlutter SemanticsLabelRegEx: " + rawMap.get("label");
+		}
+	}
 
 	public static class ValueKey extends ByFlutter {
 
@@ -205,6 +167,18 @@ public class ByFlutter extends By {
 		@Override
 		public String toString() {
 			return "Flutter value key: " + rawMap.get("keyValueString");
+		}
+	}
+	
+	public static class PageBack extends ByFlutter {
+
+		public PageBack() {
+			super(ImmutableMap.of("finderType", "PageBack"));
+		}
+
+		@Override
+		public String toString() {
+			return "Flutter PageBack";
 		}
 	}
 
