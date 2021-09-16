@@ -60,6 +60,7 @@ public class ByFlutter extends By {
 				scrollIntoView(ele);
 			} catch (Exception e) {
 				if (context!=null && QAFWebElement.class.isAssignableFrom(context.getClass())) {
+					ele.getWrappedDriver().executeScript("flutter:waitFor", context, 1);
 					scrollAndFind((QAFWebElement)context, ele);
 					scrollIntoView(ele);
 				}
