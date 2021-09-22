@@ -31,7 +31,7 @@ qaf flutter native app support - additional locator strategies for flutter app u
 Flutter driver doesn't support finding list of elements.
 
 
-##### Example
+## Example
 ```
 remote.server=localhost
 remote.port=4723
@@ -53,7 +53,7 @@ import static com.qmetry.qaf.automation.ui.webdriver.ElementFactory.$;
 import com.qmetry.qaf.automation.support.flutter.FlutterElement;
 
 
-  @Test
+        @Test
 	public void testNextRoute() {
 		waitForFirstFrame();
 	  FlutterElement parent = new FlutterElement("flutter-tooltip=counter_tooltip");
@@ -84,22 +84,25 @@ import com.qmetry.qaf.automation.support.flutter.FlutterElement;
 		textField.sendKeys("flutter test");
 		
 		entryD = list.findElement("flutter-text=Entry D");
-		System.out.println(entryD.getText());
-		FlutterUtils.getPageBackElement().click();
+		entryD.verifyText("Entry D");
+
+		//page back
+		getPageBackElement().click();
+		$("flutter-valuekey=counter").verifyPresent();
 	
 	}
 
-  @Test
+        @Test
 	public void contextTest() throws IOException {
-Set<String> contexts = ((AppiumDriver<WebElement>) getDriver().getUnderLayingDriver()).getContextHandles();
+                Set<String> contexts = ((AppiumDriver<WebElement>) getDriver().getUnderLayingDriver()).getContextHandles();
 		System.out.println(contexts);
-    //default context is FLUTTER
+               //default context is FLUTTER
     
 		Object res = getDriver().executeScript("flutter:checkHealth");
 		System.out.println("flutter:checkHealth: " + res);
 		res = getDriver().executeScript("flutter:getRenderTree");
 		System.out.println("flutter:getRenderTree: " + res);
-    res = getDriver().executeScript("flutter:getLayerTree");
+                res = getDriver().executeScript("flutter:getLayerTree");
 		System.out.println("flutter:getLayerTree: " + res);
 	
 
@@ -114,7 +117,7 @@ Set<String> contexts = ((AppiumDriver<WebElement>) getDriver().getUnderLayingDri
 
 		counter.verifyText("2", "counter");
 
-    // switch to Native 
+                // switch to Native 
 		switchContext("NATIVE_APP");
 
 		QAFExtendedWebElement content = new QAFExtendedWebElement("id=android:id/content");
@@ -140,7 +143,7 @@ Set<String> contexts = ((AppiumDriver<WebElement>) getDriver().getUnderLayingDri
 
 		counter.verifyText("5", "counter");
 
-		//This will not work because parent is not using flutter strategy. Both parent and child requied to use same native/flutter context
+		//This will not work because parent is not in flutter context. Both parent and child requied to be from same (native/flutter) context
 		//QAFExtendedWebElement increment4 = new QAFExtendedWebElement(content1, "flutter-tooltip=Increment");
 		//increment4.click();
 
