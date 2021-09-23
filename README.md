@@ -1,3 +1,7 @@
+[![License](https://img.shields.io/github/license/qmetry/qaf-support-flutter.svg)](http://www.opensource.org/licenses/mit-license.php)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.qmetry/qaf-support-flutter/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.qmetry/qaf-support-flutter)
+[![GitHub tag](https://img.shields.io/github/tag/qmetry/qaf-support-flutter.svg)](https://github.com/qmetry/qaf-support-flutter/tags)
+[![javadoc](https://javadoc.io/badge2/com.qmetry/qaf-support-flutter/javadoc.svg)](https://javadoc.io/doc/com.qmetry/qaf-support-flutter)
 # qaf-support-flutter
 qaf flutter native app support - additional locator strategies for flutter app using [appium-flutter-driver](https://github.com/appium-userland/appium-flutter-driver#appium-flutter-driver)
 
